@@ -19,25 +19,13 @@
  */
 package org.sonar.plugins.scm.perforce;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyList;
-
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
-import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.scm.BlameCommand.BlameOutput;
-import org.sonar.api.batch.scm.BlameLine;
 
 import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -47,28 +35,47 @@ import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.option.server.GetFileAnnotationsOptions;
 import com.perforce.p4java.option.server.GetRevisionHistoryOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import org.junit.Test;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.scm.BlameCommand.BlameOutput;
+import org.sonar.api.batch.scm.BlameLine;
 
-public class PerforceBlameCommandTest {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-    @Test
-    public void testBlameUnSubmittedFile() throws Exception {
-      BlameOutput blameOutput = mock(BlameOutput.class);
-      IOptionsServer server = mock(IOptionsServer.class);
-      PerforceBlameCommand command = new PerforceBlameCommand(mock(PerforceConfiguration.class));
-
-      IFileAnnotation annotation = mock(IFileAnnotation.class);
-      when(annotation.getDepotPath()).thenReturn(null);
-      when(server.getFileAnnotations((List<IFileSpec>)(List<?>) anyList(), any(GetFileAnnotationsOptions.class))).thenReturn(Collections.singletonList(annotation));
-
-      command.blame(mock(InputFile.class), server, blameOutput);
-
-      verifyNoInteractions(blameOutput);
-    }
+public class PerforceBlameCommandTest
+{
 
   @Test
-  public void testBlameSubmittedFile() throws Exception {
+  public void testBlameUnSubmittedFile() throws Exception
+  {
     BlameOutput blameOutput = mock(BlameOutput.class);
-    
+    IOptionsServer server = mock(IOptionsServer.class);
+    PerforceBlameCommand command = new PerforceBlameCommand(mock(PerforceConfiguration.class));
+
+    IFileAnnotation annotation = mock(IFileAnnotation.class);
+    when(annotation.getDepotPath()).thenReturn(null);
+    when(server.getFileAnnotations((List<IFileSpec>) (List<?>) anyList(), any(GetFileAnnotationsOptions.class)))
+      .thenReturn(Collections.singletonList(annotation));
+
+    InputFile inputFile = mock(InputFile.class);
+    when(inputFile.uri()).thenReturn(Paths.get("foo/bar/src/Foo.java").toUri());
+
+    command.blame(inputFile, server, blameOutput);
+
+    verifyNoInteractions(blameOutput);
+  }
+
+  @Test
+  public void testBlameSubmittedFile() throws Exception
+  {
+    BlameOutput blameOutput = mock(BlameOutput.class);
+
     IOptionsServer server = mock(IOptionsServer.class);
     PerforceBlameCommand command = new PerforceBlameCommand(mock(PerforceConfiguration.class));
 
@@ -108,10 +115,10 @@ public class PerforceBlameCommandTest {
     when(revision3.getDate()).thenReturn(date);
     when(revision3.getUserName()).thenReturn("jhenry");
     result.put(fileSpecResult, Collections.singletonList(revision3));
-    
+
     //(List<IFileSpec>)(List<?>) anyList()
-    when(server.getRevisionHistory((List<IFileSpec>)(List<?>) anyList(), any(GetRevisionHistoryOptions.class))).thenReturn(result);
-    when(server.getFileAnnotations((List<IFileSpec>)(List<?>) anyList(), any(GetFileAnnotationsOptions.class)))
+    when(server.getRevisionHistory((List<IFileSpec>) (List<?>) anyList(), any(GetRevisionHistoryOptions.class))).thenReturn(result);
+    when(server.getFileAnnotations((List<IFileSpec>) (List<?>) anyList(), any(GetFileAnnotationsOptions.class)))
       .thenReturn(Arrays.asList(line1ChangeList3, line2ChangeList3, line3ChangeList4, line4ChangeList5, line5ChangeList4));
 
     IChangelist changelist = mock(IChangelist.class);
@@ -122,6 +129,7 @@ public class PerforceBlameCommandTest {
     when(server.getChangelist(5)).thenReturn(null);
 
     InputFile inputFile = mock(InputFile.class);
+    when(inputFile.uri()).thenReturn(Paths.get("foo/bar/src/Foo.java").toUri());
     command.blame(inputFile, server, blameOutput);
 
     BlameLine line1 = new BlameLine().revision("3").date(date).author("jhenry");
@@ -136,7 +144,8 @@ public class PerforceBlameCommandTest {
   }
 
   @Test
-  public void testBlameSubmittedFileLastEmptyLine() throws Exception {
+  public void testBlameSubmittedFileLastEmptyLine() throws Exception
+  {
     BlameOutput blameOutput = mock(BlameOutput.class);
     IOptionsServer server = mock(IOptionsServer.class);
     PerforceBlameCommand command = new PerforceBlameCommand(mock(PerforceConfiguration.class));
@@ -145,7 +154,8 @@ public class PerforceBlameCommandTest {
     when(annotation.getDepotPath()).thenReturn("foo/bar/src/Foo.java");
     when(annotation.getLower()).thenReturn(3);
 
-    when(server.getFileAnnotations((List<IFileSpec>)(List<?>) anyList(), any(GetFileAnnotationsOptions.class))).thenReturn(Collections.singletonList(annotation));
+    when(server.getFileAnnotations((List<IFileSpec>) (List<?>) anyList(), any(GetFileAnnotationsOptions.class)))
+      .thenReturn(Collections.singletonList(annotation));
 
     IChangelist changelist = mock(IChangelist.class);
     Date date = new Date();
@@ -154,12 +164,12 @@ public class PerforceBlameCommandTest {
     when(server.getChangelist(3)).thenReturn(changelist);
 
     InputFile inputFile = mock(InputFile.class);
+    when(inputFile.uri()).thenReturn(Paths.get("foo/bar/src/Foo.java").toUri());
     when(inputFile.lines()).thenReturn(2);
     command.blame(inputFile, server, blameOutput);
 
     BlameLine line = new BlameLine().revision("3").date(date).author("jhenry");
-   
+
     verify(blameOutput).blameResult(inputFile, Arrays.asList(line, line));
   }
-
 }

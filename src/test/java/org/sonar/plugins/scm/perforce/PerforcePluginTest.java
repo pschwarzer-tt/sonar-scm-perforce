@@ -21,14 +21,24 @@
 package org.sonar.plugins.scm.perforce;
 
 import org.junit.Test;
-import org.hamcrest.SelfDescribing;
+import org.sonar.api.Plugin.Context;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class PerforcePluginTest {
 
   @Test
-  public void getExtensions() {
-    assertThat(new PerforcePlugin().getExtensions()).hasSize(12);
+  public void define_set_expected_values()
+  {
+    Context context = mock(Context.class);
+
+    new PerforcePlugin().define(context);
+
+    verify(context).addExtensions(
+      PerforceBlameCommand.class,
+      PerforceScmProvider.class,
+      PerforceExecutor.class,
+      PerforceConfiguration.class);
   }
 }
